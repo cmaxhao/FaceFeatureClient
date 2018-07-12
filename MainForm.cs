@@ -24,8 +24,6 @@ namespace DF_FaceTracking.cs
         public PXCMSession Session;
         public FacialExpression Expression;
         public volatile bool RegisterThisID = false;
-        public volatile bool Register = false;
-        public volatile bool Unregister = false;
         public volatile bool Stopped = false;
         public readonly Dictionary<PXCMFaceConfiguration.TrackingModeType, string> FaceModesMap =
            new Dictionary<PXCMFaceConfiguration.TrackingModeType, string>()
@@ -39,7 +37,6 @@ namespace DF_FaceTracking.cs
         private readonly object m_bitmapLock = new object();
         private readonly FaceTextOrganizer m_faceTextOrganizer;
         private Dictionary<String, ModuleSettings> m_moduleSettings;
-        private IEnumerable<CheckBox> m_modulesCheckBoxes;
         private Bitmap m_bitmap;
         private string m_filename;
         private Tuple<PXCMImage.ImageInfo, PXCMRangeF32> m_selectedColorResolution;
@@ -48,7 +45,7 @@ namespace DF_FaceTracking.cs
         private static ToolStripMenuItem m_moduleMenuItem;
         private const int LandmarkAlignment = -3;
         private const int DefaultNumberOfFaces = 4;
-
+        private string sessionID;
         public MainForm(PXCMSession session)
         {
             InitializeComponent();
@@ -66,9 +63,7 @@ namespace DF_FaceTracking.cs
             PopulateProfileMenu();
 
             InitializeUserSettings();
-            InitializeCheckboxes();
             DisableUnsupportedAlgos();
-            RestoreUserSettings();
 
             FormClosing += MainForm_FormClosing;
             Panel2.Paint += Panel_Paint;
@@ -80,6 +75,16 @@ namespace DF_FaceTracking.cs
             Stream fileFeature = new FileStream(string.Format("{0}{1}", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"\FaceFeature.txt"), FileMode.Append);
             sw_feature = new StreamWriter(fileFeature);
             sw_feature.BaseStream.Seek(0, SeekOrigin.End);
+            //创建存储视频的文件夹
+            sessionID = Guid.NewGuid().ToString();
+            string videoPath = Environment.CurrentDirectory + "\\data\\" + sessionID;
+            try
+            {
+                Directory.CreateDirectory(videoPath);
+            }
+            catch (Exception ex) {
+
+            }
         }
 
         private void InitializeUserSettings()
@@ -94,7 +99,6 @@ namespace DF_FaceTracking.cs
                 m_moduleSettings["Detection"] = new ModuleSettings { IsEnabled = true, NumberOfFaces = 4 };
                 m_moduleSettings["Landmarks"] = new ModuleSettings { IsEnabled = true, NumberOfFaces = 4 };
                 m_moduleSettings["Pose"] = new ModuleSettings { IsEnabled = true, NumberOfFaces = 4 };
-                m_moduleSettings["Recognition"] = new ModuleSettings { IsEnabled = false, NumberOfFaces = 4 };
                 m_moduleSettings["Expressions"] = new ModuleSettings { IsEnabled = true, NumberOfFaces = 4 };
                 m_moduleSettings["Pulse"] = new ModuleSettings { IsEnabled = false, NumberOfFaces = 4 };
             }
@@ -121,22 +125,7 @@ namespace DF_FaceTracking.cs
 
             if (deviceMenuString != null && (deviceMenuString.Contains("R200") || deviceMenuString.Contains("DS4")))
             {
-                DisablePose();
-                DisableExpressions();
-                DisablePulse();
             }
-        }
-
-        private void InitializeCheckboxes()
-        {
-            m_modulesCheckBoxes = new List<CheckBox>
-            {
-                Detection,
-                Landmarks,
-                Pose,
-                Pulse,
-                Expressions,
-            };
         }
 
         public Dictionary<string, PXCMCapture.DeviceInfo> Devices { get; set; }
@@ -151,48 +140,7 @@ namespace DF_FaceTracking.cs
             Tuple.Create(640, 360),
         };
         
-        //默认值全部设置为4
-        public int NumDetection
-        {
-            get
-            {
-                int val =4;
-                return val;
-            }
-        }
-        public int NumLandmarks
-        {
-            get
-            {
-                int val =4;
-                return val;
-            }
-        }
-        public int NumPose
-        {
-            get
-            {
-                int val =4;
-                return val;
-            }
-        }
-        public int NumExpressions
-        {
-            get
-            {
-                int val=4;
-                return val;
-            }
-        }
-        public int NumPulse
-        {
-            get
-            {
-                int val=4;
-                return val;
-            }
-        }
-
+        //最大识别脸的数量默认值全部设置为4
         public string GetFileName()
         {
             return m_filename;
@@ -512,14 +460,9 @@ namespace DF_FaceTracking.cs
             FaceTracking.m_frame = 0;
 
             SaveUserSettings();
-            DisableModuleCheckBoxes();
-
             MainMenu.Enabled = false;
             Start.Enabled = false;
             Stop.Enabled = true;
-
-            RegisterUser.Enabled = false ;
-            UnregisterUser.Enabled = false;
 
             Stopped = false;
             //此处开始做人脸识别跟踪
@@ -534,17 +477,11 @@ namespace DF_FaceTracking.cs
 
             Invoke(new DoTrackingCompleted(() =>
             {
-                EnableModuleCheckBoxes();
                 DisableUnsupportedAlgos();
-                RestoreUserSettings();
 
                 MainMenu.Enabled = true;
                 Start.Enabled = true;
                 Stop.Enabled = false;
-
-                RegisterUser.Enabled = false;
-                UnregisterUser.Enabled = false;
-
                 if (m_closing) Close();
             }));
         }
@@ -558,31 +495,21 @@ namespace DF_FaceTracking.cs
 
         private void SaveUserSettings()
         {
-            m_moduleSettings["Detection"].IsEnabled = Detection.Checked;
-            m_moduleSettings["Detection"].NumberOfFaces = NumDetection;
+            m_moduleSettings["Detection"].IsEnabled = true;
+            m_moduleSettings["Detection"].NumberOfFaces = 4;
 
-            m_moduleSettings["Landmarks"].IsEnabled = Landmarks.Checked;
-            m_moduleSettings["Landmarks"].NumberOfFaces = NumLandmarks;
+            m_moduleSettings["Landmarks"].IsEnabled = true;
+            m_moduleSettings["Landmarks"].NumberOfFaces = 4;
 
-            m_moduleSettings["Pose"].IsEnabled = Pose.Checked;
-            m_moduleSettings["Pose"].NumberOfFaces = NumPose;
+            m_moduleSettings["Pose"].IsEnabled = true;
+            m_moduleSettings["Pose"].NumberOfFaces = 4;
 
-            m_moduleSettings["Expressions"].IsEnabled = Expressions.Checked;
-            m_moduleSettings["Expressions"].NumberOfFaces = NumExpressions;
+            m_moduleSettings["Expressions"].IsEnabled = true;
+            m_moduleSettings["Expressions"].NumberOfFaces =4;
 
-            m_moduleSettings["Pulse"].IsEnabled = Pulse.Checked;
-            m_moduleSettings["Pulse"].NumberOfFaces = NumPulse;
+            m_moduleSettings["Pulse"].IsEnabled = false;
+            m_moduleSettings["Pulse"].NumberOfFaces = 4;
 
-            m_moduleSettings["Recognition"].IsEnabled = false;
-        }
-
-        private void RestoreUserSettings()
-        {
-            Detection.Checked = m_moduleSettings["Detection"].IsEnabled;
-            Landmarks.Checked = m_moduleSettings["Landmarks"].IsEnabled;
-            Pose.Checked = m_moduleSettings["Pose"].IsEnabled;
-            Expressions.Checked = m_moduleSettings["Expressions"].IsEnabled;
-            Pulse.Checked = m_moduleSettings["Pulse"].IsEnabled;
         }
 
         public string GetCheckedDevice()
@@ -658,14 +585,11 @@ namespace DF_FaceTracking.cs
             lock (m_bitmapLock)
             {
                 if (m_bitmap == null) return;
-                if (Scale.Checked)
-                {
+
+                    //是否显示视频图像
                     e.Graphics.DrawImage(m_bitmap, Panel2.ClientRectangle);
-                }
-                else
-                {
-                    e.Graphics.DrawImageUnscaled(m_bitmap, 0, 0);
-                }
+
+ 
             }
         }
 
@@ -712,25 +636,15 @@ namespace DF_FaceTracking.cs
                     m_faceTextOrganizer.ChangeFace(i, face, m_bitmap.Height, m_bitmap.Width);
                 }
 
-                DrawLocation(face);
-                DrawLandmark(face);
-                DrawPose(face);
-                DrawPulse(face);
-                DrawExpressions(face);
+                //DrawLocation(face);
+                //DrawLandmark(face);
+                //DrawPose(face);
+                //绘制分辨率为1280*720的图像
+                //DrawPulse(face);
+                //DrawExpressions(face);
             }
         }
         //zz
-
-        private void RegisterUser_Click(object sender, EventArgs e)
-        {
-            Register = true;
-            RegisterThisID = true;
-        }
-
-        private void UnregisterUser_Click(object sender, EventArgs e)
-        {
-            Unregister = true;
-        }
 
         #region  Record
 
@@ -746,7 +660,7 @@ namespace DF_FaceTracking.cs
             try
             {   
                 string time = DateTime.Now.ToString("yyyy-MM-dd");
-                m_filename = Environment.CurrentDirectory + "\\data\\" + time + "\\record.rssdk";
+                m_filename = Environment.CurrentDirectory + "\\data\\" +sessionID+ "\\record.rssdk";
             }
             catch (Exception)
             {
@@ -794,7 +708,7 @@ namespace DF_FaceTracking.cs
         public void DrawLocation(PXCMFaceData.Face face)
         {
             Debug.Assert(face != null);
-            if (m_bitmap == null || !Detection.Checked) return;
+            if (m_bitmap == null ) return;
 
             PXCMFaceData.DetectionData detection = face.QueryDetection();
             if (detection == null)
@@ -828,7 +742,7 @@ namespace DF_FaceTracking.cs
             }
             bool tag = true;  //是否小于阈值的tag
             
-            if (m_bitmap == null || !Landmarks.Checked || landmarks == null) return;
+            if (m_bitmap == null || landmarks == null) return;
 
             lock (m_bitmapLock)
             {
@@ -893,7 +807,7 @@ namespace DF_FaceTracking.cs
                    
                     //显示z的距离，鼻尖到摄像头的距离
                     string status="提示";
-                    string tip = null;
+                    string tip = "";
                     if (points[29].world.z < 0.26)
                     {
                         tip = "√ ";
@@ -944,7 +858,7 @@ namespace DF_FaceTracking.cs
             {
                 return;
             }
-            if (!Pose.Checked || !pdata.QueryPoseAngles(out poseAngles)) return;
+            if (!pdata.QueryPoseAngles(out poseAngles)) return;
 
             lock (m_bitmapLock)
             {
@@ -973,7 +887,7 @@ namespace DF_FaceTracking.cs
         public void DrawExpressions(PXCMFaceData.Face face)
         {
             Debug.Assert(face != null);
-            if (m_bitmap == null || !Expressions.Checked) return;
+            if (m_bitmap == null ) return;
 
             PXCMFaceData.ExpressionsData expressionsOutput = face.QueryExpressions();
 
@@ -1025,7 +939,7 @@ namespace DF_FaceTracking.cs
         private void DrawPulse(PXCMFaceData.Face face)
         {
             Debug.Assert(face != null);
-            if (m_bitmap == null || !Pulse.Checked) return;
+            if (m_bitmap == null || true) return;
 
             var pulseData = face.QueryPulse();
             if (pulseData == null)
@@ -1053,77 +967,10 @@ namespace DF_FaceTracking.cs
 
         private delegate void UpdateStatusDelegate(string status);
 
-        public bool IsDetectionEnabled()
-        {
-            return Detection.Checked;
-        }
-
-        public bool IsLandmarksEnabled()
-        {
-            return Landmarks.Checked;
-        }
-
-        public bool IsPoseEnabled()
-        {
-            return Pose.Checked;
-        }
-
-        public bool IsExpressionsEnabled()
-        {
-            return Expressions.Checked;
-        }
-
         public bool IsPulseEnabled()
         {
-            return Pulse.Checked;
+            return false;
         }
-
-        private void DisableDetection()
-        {
-            Detection.Enabled = false;
-            Detection.Checked = false;
-        }
-
-        private void DisableLandmarks()
-        {
-            Landmarks.Enabled = false;
-            Landmarks.Checked = false;
-        }
-
-        private void DisablePose()
-        {
-            Pose.Enabled = false;
-            Pose.Checked = false;
-        }
-
-        private void DisableExpressions()
-        {
-            Expressions.Enabled = false;
-            Expressions.Checked = false;
-        }
-
-        private void DisablePulse()
-        {
-            Pulse.Enabled = false;
-            Pulse.Checked = false;
-        }
-
-        private void EnableModuleCheckBoxes()
-        {
-            foreach (CheckBox moduleCheckBox in m_modulesCheckBoxes)
-            {
-                moduleCheckBox.Enabled = true;
-            }
-        }
-
-        private void DisableModuleCheckBoxes()
-        {
-            foreach (CheckBox moduleCheckBox in m_modulesCheckBoxes)
-            {
-                moduleCheckBox.Enabled = false;
-            }
-        }
-
         private void Savedata_txt_Click(object sender, EventArgs e)
         {
             expressionNumber++;
@@ -1152,9 +999,7 @@ namespace DF_FaceTracking.cs
                     double position_y = Math.Round(points[i].image.y - rect.y, 4);
                     double position_z = Math.Round(points[i].world.z, 5);
 
-                    sw_feature.Write(position_x.ToString()+ ' '+
-                        position_y.ToString() + ' '+
-                        position_z.ToString() + ' ');
+                    sw_feature.Write(position_x.ToString()+ ' '+ position_y.ToString() + ' '+ position_z.ToString() + ' ');
                 }
             for (int i = 0; i < 22; i++)
             {

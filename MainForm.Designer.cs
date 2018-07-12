@@ -41,15 +41,7 @@
             this.Status2 = new System.Windows.Forms.StatusStrip();
             this.StatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.AlertsLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.Scale = new System.Windows.Forms.CheckBox();
             this.Panel2 = new System.Windows.Forms.PictureBox();
-            this.RegisterUser = new System.Windows.Forms.Button();
-            this.UnregisterUser = new System.Windows.Forms.Button();
-            this.Detection = new System.Windows.Forms.CheckBox();
-            this.Landmarks = new System.Windows.Forms.CheckBox();
-            this.Pose = new System.Windows.Forms.CheckBox();
-            this.Expressions = new System.Windows.Forms.CheckBox();
-            this.Pulse = new System.Windows.Forms.CheckBox();
             this.Savedata_txt = new System.Windows.Forms.Button();
             this.MainMenu.SuspendLayout();
             this.Status2.SuspendLayout();
@@ -105,6 +97,7 @@
             this.MainMenu.Size = new System.Drawing.Size(941, 25);
             this.MainMenu.TabIndex = 0;
             this.MainMenu.Text = "MainMenu";
+            this.MainMenu.Visible = true;
             // 
             // colorResolutionToolStripMenuItem
             // 
@@ -132,14 +125,14 @@
             this.Live.Checked = true;
             this.Live.CheckState = System.Windows.Forms.CheckState.Checked;
             this.Live.Name = "Live";
-            this.Live.Size = new System.Drawing.Size(127, 22);
+            this.Live.Size = new System.Drawing.Size(118, 22);
             this.Live.Text = "Live";
             this.Live.Click += new System.EventHandler(this.Live_Click);
             // 
             // Record
             // 
             this.Record.Name = "Record";
-            this.Record.Size = new System.Drawing.Size(127, 22);
+            this.Record.Size = new System.Drawing.Size(118, 22);
             this.Record.Text = "Record";
             this.Record.Click += new System.EventHandler(this.Record_Click);
             // 
@@ -170,19 +163,6 @@
             this.AlertsLabel.Size = new System.Drawing.Size(200, 15);
             this.AlertsLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // Scale
-            // 
-            this.Scale.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.Scale.AutoSize = true;
-            this.Scale.Checked = true;
-            this.Scale.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.Scale.Location = new System.Drawing.Point(819, 25);
-            this.Scale.Name = "Scale";
-            this.Scale.Size = new System.Drawing.Size(54, 16);
-            this.Scale.TabIndex = 26;
-            this.Scale.Text = "Scale";
-            this.Scale.UseVisualStyleBackColor = true;
-            // 
             // Panel2
             // 
             this.Panel2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -196,86 +176,6 @@
             this.Panel2.Size = new System.Drawing.Size(802, 410);
             this.Panel2.TabIndex = 27;
             this.Panel2.TabStop = false;
-
-            // 
-            // RegisterUser
-            // 
-            this.RegisterUser.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.RegisterUser.Enabled = false;
-            this.RegisterUser.Location = new System.Drawing.Point(820, 261);
-            this.RegisterUser.Name = "RegisterUser";
-            this.RegisterUser.Size = new System.Drawing.Size(80, 21);
-            this.RegisterUser.TabIndex = 34;
-            this.RegisterUser.Text = "Register";
-            this.RegisterUser.UseVisualStyleBackColor = true;
-            this.RegisterUser.Click += new System.EventHandler(this.RegisterUser_Click);
-            // 
-            // UnregisterUser
-            // 
-            this.UnregisterUser.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.UnregisterUser.Enabled = false;
-            this.UnregisterUser.Location = new System.Drawing.Point(820, 288);
-            this.UnregisterUser.Name = "UnregisterUser";
-            this.UnregisterUser.Size = new System.Drawing.Size(80, 21);
-            this.UnregisterUser.TabIndex = 35;
-            this.UnregisterUser.Text = "Unregister";
-            this.UnregisterUser.UseVisualStyleBackColor = true;
-            this.UnregisterUser.Click += new System.EventHandler(this.UnregisterUser_Click);
-            // 
-            // Detection
-            // 
-            this.Detection.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.Detection.AutoSize = true;
-            this.Detection.Location = new System.Drawing.Point(814, 67);
-            this.Detection.Name = "Detection";
-            this.Detection.Size = new System.Drawing.Size(78, 16);
-            this.Detection.TabIndex = 46;
-            this.Detection.Text = "Detection";
-            this.Detection.UseVisualStyleBackColor = true;
-            // 
-            // Landmarks
-            // 
-            this.Landmarks.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.Landmarks.AutoSize = true;
-            this.Landmarks.Location = new System.Drawing.Point(820, 89);
-            this.Landmarks.Name = "Landmarks";
-            this.Landmarks.Size = new System.Drawing.Size(78, 16);
-            this.Landmarks.TabIndex = 47;
-            this.Landmarks.Text = "Landmarks";
-            this.Landmarks.UseVisualStyleBackColor = true;
-            // 
-            // Pose
-            // 
-            this.Pose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.Pose.AutoSize = true;
-            this.Pose.Location = new System.Drawing.Point(822, 110);
-            this.Pose.Name = "Pose";
-            this.Pose.Size = new System.Drawing.Size(48, 16);
-            this.Pose.TabIndex = 48;
-            this.Pose.Text = "Pose";
-            this.Pose.UseVisualStyleBackColor = true;
-            // 
-            // Expressions
-            // 
-            this.Expressions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.Expressions.AutoSize = true;
-            this.Expressions.Location = new System.Drawing.Point(812, 131);
-            this.Expressions.Name = "Expressions";
-            this.Expressions.Size = new System.Drawing.Size(90, 16);
-            this.Expressions.TabIndex = 49;
-            this.Expressions.Text = "Expressions";
-            this.Expressions.UseVisualStyleBackColor = true;
-            // 
-            // Pulse
-            // 
-            this.Pulse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.Pulse.AutoSize = true;
-            this.Pulse.Location = new System.Drawing.Point(818, 152);
-            this.Pulse.Name = "Pulse";
-            this.Pulse.Size = new System.Drawing.Size(54, 16);
-            this.Pulse.TabIndex = 51;
-            this.Pulse.Text = "Pulse";
-            this.Pulse.UseVisualStyleBackColor = true;
             // 
             // Savedata_txt
             // 
@@ -287,7 +187,6 @@
             this.Savedata_txt.UseVisualStyleBackColor = true;
             this.Savedata_txt.Click += new System.EventHandler(this.Savedata_txt_Click);
             this.Savedata_txt.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Savedata_txt_KeyDown);
-
             // 
             // MainForm
             // 
@@ -296,15 +195,7 @@
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(941, 462);
             this.Controls.Add(this.Savedata_txt);
-            this.Controls.Add(this.Pulse);
-            this.Controls.Add(this.Expressions);
-            this.Controls.Add(this.Pose);
-            this.Controls.Add(this.Landmarks);
-            this.Controls.Add(this.Detection);
-            this.Controls.Add(this.UnregisterUser);
-            this.Controls.Add(this.RegisterUser);
             this.Controls.Add(this.Panel2);
-            this.Controls.Add(this.Scale);
             this.Controls.Add(this.Status2);
             this.Controls.Add(this.Stop);
             this.Controls.Add(this.Start);
@@ -332,22 +223,14 @@
         private System.Windows.Forms.MenuStrip MainMenu;
         private System.Windows.Forms.StatusStrip Status2;
         private System.Windows.Forms.ToolStripStatusLabel StatusLabel;
-        private new System.Windows.Forms.CheckBox Scale;
         private System.Windows.Forms.PictureBox Panel2;
         private System.Windows.Forms.ToolStripMenuItem modeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem Live;
         private System.Windows.Forms.ToolStripMenuItem Record;
-        private System.Windows.Forms.ToolStripMenuItem ProfileToolStripMenuItem;
         private System.Windows.Forms.ToolStripStatusLabel AlertsLabel;
-        private System.Windows.Forms.Button RegisterUser;
-        private System.Windows.Forms.Button UnregisterUser;
         private System.Windows.Forms.ToolStripMenuItem colorResolutionToolStripMenuItem;
-        private System.Windows.Forms.CheckBox Detection;
-        private System.Windows.Forms.CheckBox Landmarks;
-        private System.Windows.Forms.CheckBox Pose;
-        private System.Windows.Forms.CheckBox Expressions;
         //private System.Windows.Forms.CheckBox Mirror;
-        private System.Windows.Forms.CheckBox Pulse;
         private System.Windows.Forms.Button Savedata_txt;
+        private System.Windows.Forms.ToolStripMenuItem ProfileToolStripMenuItem;
     }
 }

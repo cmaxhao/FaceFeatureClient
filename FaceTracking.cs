@@ -153,25 +153,24 @@ namespace DF_FaceTracking.cs
 
             moduleConfiguration.strategy = PXCMFaceConfiguration.TrackingStrategyType.STRATEGY_RIGHT_TO_LEFT;
 
-            moduleConfiguration.detection.maxTrackedFaces = m_form.NumDetection;
-            moduleConfiguration.landmarks.maxTrackedFaces = m_form.NumLandmarks;
-            moduleConfiguration.pose.maxTrackedFaces = m_form.NumPose;
+            moduleConfiguration.detection.maxTrackedFaces = 4;
+            moduleConfiguration.landmarks.maxTrackedFaces = 4;
+            moduleConfiguration.pose.maxTrackedFaces = 4;
             
             PXCMFaceConfiguration.ExpressionsConfiguration econfiguration = moduleConfiguration.QueryExpressions();
             if (econfiguration == null)
             {
                 throw new Exception("ExpressionsConfiguration null");
             }
-            econfiguration.properties.maxTrackedFaces = m_form.NumExpressions;
+            econfiguration.properties.maxTrackedFaces = 4;
 
             econfiguration.EnableAllExpressions();
-            moduleConfiguration.detection.isEnabled = m_form.IsDetectionEnabled();
-            moduleConfiguration.landmarks.isEnabled = m_form.IsLandmarksEnabled();
-            moduleConfiguration.pose.isEnabled = m_form.IsPoseEnabled();
-            if (m_form.IsExpressionsEnabled())
-            { 
+            moduleConfiguration.detection.isEnabled = true;
+            moduleConfiguration.landmarks.isEnabled = true;
+            moduleConfiguration.pose.isEnabled = true;
+            
                 econfiguration.Enable();
-            }
+            
 
             PXCMFaceConfiguration.PulseConfiguration pulseConfiguration = moduleConfiguration.QueryPulse();
             if (pulseConfiguration == null)
@@ -179,7 +178,7 @@ namespace DF_FaceTracking.cs
                 throw new Exception("pulseConfiguration null");
             }
 			
-            pulseConfiguration.properties.maxTrackedFaces = m_form.NumPulse;
+            pulseConfiguration.properties.maxTrackedFaces = 4;
             if (m_form.IsPulseEnabled())
             {
                 pulseConfiguration.Enable();
@@ -261,10 +260,6 @@ namespace DF_FaceTracking.cs
                                 continue;
                             }
 
-                            if (recognition.properties.isEnabled)
-                            {
-                                UpdateRecognition(moduleOutput);
-                            }
 
                             m_form.DrawGraphics(moduleOutput,lastmoduleOutput);
                             lastmoduleOutput = moduleOutput;
@@ -282,33 +277,6 @@ namespace DF_FaceTracking.cs
             pp.Dispose();
         }
 
-        private void UpdateRecognition(PXCMFaceData faceOutput)
-        {
-            //TODO: add null checks
-            if (m_form.Register) RegisterUser(faceOutput);
-            if (m_form.Unregister) UnregisterUser(faceOutput);
-            //if (faceOutput.QueryNumberOfDetectedFaces() > 0)
-            //    Savedata_Acess(faceOutput);
-        }
-
-        private void RegisterUser(PXCMFaceData faceOutput)
-        {
-            m_form.Register = false;
-            if (faceOutput.QueryNumberOfDetectedFaces() <= 0)
-                return;
-            //Savedata_Acess(faceOutput);
-            PXCMFaceData.Face qface = faceOutput.QueryFaceByIndex(0);
-            if (qface == null)
-            {
-                throw new Exception("PXCMFaceData.Face null");
-            }
-            PXCMFaceData.RecognitionData rdata = qface.QueryRecognition();
-            if (rdata == null)
-            {
-                throw new Exception(" PXCMFaceData.RecognitionData null");
-            }
-            rdata.RegisterUser();
-        }
         //zz
         private void Savedata(PXCMFaceData faceOutput)
         {
@@ -382,8 +350,6 @@ namespace DF_FaceTracking.cs
                 sCmd.ExecuteNonQuery();
                
             }
-
-
             sConn.Close();
         }
 
@@ -471,33 +437,6 @@ namespace DF_FaceTracking.cs
             }
 
             return PName;
-        }
-
-        private void UnregisterUser(PXCMFaceData faceOutput)
-        {
-            m_form.Unregister = false;
-            if (faceOutput.QueryNumberOfDetectedFaces() <= 0)
-            {
-                return;
-            }
-
-            var qface = faceOutput.QueryFaceByIndex(0);
-            if (qface == null)
-            {
-                throw new Exception("PXCMFaceData.Face null");
-            }
-
-            PXCMFaceData.RecognitionData rdata = qface.QueryRecognition();
-            if (rdata == null)
-            {
-                throw new Exception(" PXCMFaceData.RecognitionData null");
-            }
-
-            if (!rdata.IsRegistered())
-            {
-                return;
-            }
-            rdata.UnregisterUser();
         }
     }
 }
