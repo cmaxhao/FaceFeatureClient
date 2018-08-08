@@ -1,0 +1,2 @@
+# FaceFeatureClient
+C#客户端程序，用于启动RealSense摄像头、采集视频图像流、采集人脸特征点信息，并将该客户端发布为Http服务器,提供GET请求接口和Post请求接口，以供JS或者web调用
