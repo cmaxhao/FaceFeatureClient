@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DF_FaceTracking.cs</RootNamespace>
     <AssemblyName>DF_FaceTracking.cs</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -77,10 +77,38 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>intel.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="libpxcclr.cs, Version=11.0.27.1384, Culture=neutral, PublicKeyToken=ca106b2214526f83, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\x64\Debug\libpxcclr.cs.dll</HintPath>
+    </Reference>
+    <Reference Include="MaterialSkin, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\MaterialSkin.0.2.1\lib\MaterialSkin.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite">
+      <HintPath>C:\Users\hao_chen\Desktop\新建文件夹\System.Data.SQLite.dll</HintPath>
+    </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Channels" />
+    <Reference Include="System.ServiceModel.Web" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Services" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -93,6 +121,22 @@
     <Compile Include="FaceTextOrganizer.cs" />
     <Compile Include="FaceTracking.cs" />
     <Compile Include="FacialExpression.cs" />
+    <Compile Include="File\ConfigReader.cs" />
+    <Compile Include="File\StateTable.cs" />
+    <Compile Include="File\UploadFile.cs" />
+    <Compile Include="WriteLog.cs" />
+    <Compile Include="HttpServer\BaseHeader.cs" />
+    <Compile Include="HttpServer\ConsoleLogger.cs" />
+    <Compile Include="HttpServer\ExampleServer.cs" />
+    <Compile Include="HttpServer\HeadersHelper.cs" />
+    <Compile Include="HttpServer\HttpRequest.cs" />
+    <Compile Include="HttpServer\HttpResponse.cs" />
+    <Compile Include="HttpServer\HttpServer.cs" />
+    <Compile Include="HttpServer\ILogger.cs" />
+    <Compile Include="HttpServer\IServer.cs" />
+    <Compile Include="HttpServer\Protocols.cs" />
+    <Compile Include="HttpServer\RequestHeaders.cs" />
+    <Compile Include="HttpServer\ResponseHeaders.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -115,7 +159,10 @@
     <Compile Include="timer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -154,10 +201,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="libpxcclr.cs">
-      <HintPath>.\libpxcclr.cs.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="intel.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

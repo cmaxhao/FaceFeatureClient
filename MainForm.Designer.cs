@@ -28,8 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.Start = new System.Windows.Forms.Button();
-            this.Stop = new System.Windows.Forms.Button();
+            this.Start = new MaterialSkin.Controls.MaterialRaisedButton();
+            this.Stop = new MaterialSkin.Controls.MaterialRaisedButton();
             this.sourceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.moduleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.MainMenu = new System.Windows.Forms.MenuStrip();
@@ -42,7 +42,6 @@
             this.StatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.AlertsLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.Panel2 = new System.Windows.Forms.PictureBox();
-            this.Savedata_txt = new System.Windows.Forms.Button();
             this.MainMenu.SuspendLayout();
             this.Status2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.Panel2)).BeginInit();
@@ -51,8 +50,11 @@
             // Start
             // 
             this.Start.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.Start.Location = new System.Drawing.Point(820, 208);
+            this.Start.Depth = 0;
+            this.Start.Location = new System.Drawing.Point(843, 159);
+            this.Start.MouseState = MaterialSkin.MouseState.HOVER;
             this.Start.Name = "Start";
+            this.Start.Primary = true;
             this.Start.Size = new System.Drawing.Size(80, 21);
             this.Start.TabIndex = 2;
             this.Start.Text = "Start";
@@ -62,9 +64,12 @@
             // Stop
             // 
             this.Stop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.Stop.Depth = 0;
             this.Stop.Enabled = false;
-            this.Stop.Location = new System.Drawing.Point(820, 234);
+            this.Stop.Location = new System.Drawing.Point(843, 224);
+            this.Stop.MouseState = MaterialSkin.MouseState.HOVER;
             this.Stop.Name = "Stop";
+            this.Stop.Primary = true;
             this.Stop.Size = new System.Drawing.Size(80, 21);
             this.Stop.TabIndex = 3;
             this.Stop.Text = "Stop";
@@ -97,7 +102,7 @@
             this.MainMenu.Size = new System.Drawing.Size(941, 25);
             this.MainMenu.TabIndex = 0;
             this.MainMenu.Text = "MainMenu";
-            this.MainMenu.Visible = true;
+            this.MainMenu.Visible = false;
             // 
             // colorResolutionToolStripMenuItem
             // 
@@ -177,33 +182,19 @@
             this.Panel2.TabIndex = 27;
             this.Panel2.TabStop = false;
             // 
-            // Savedata_txt
-            // 
-            this.Savedata_txt.Location = new System.Drawing.Point(822, 336);
-            this.Savedata_txt.Name = "Savedata_txt";
-            this.Savedata_txt.Size = new System.Drawing.Size(75, 23);
-            this.Savedata_txt.TabIndex = 53;
-            this.Savedata_txt.Text = "录数据";
-            this.Savedata_txt.UseVisualStyleBackColor = true;
-            this.Savedata_txt.Click += new System.EventHandler(this.Savedata_txt_Click);
-            this.Savedata_txt.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Savedata_txt_KeyDown);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(941, 462);
-            this.Controls.Add(this.Savedata_txt);
             this.Controls.Add(this.Panel2);
             this.Controls.Add(this.Status2);
             this.Controls.Add(this.Stop);
             this.Controls.Add(this.Start);
             this.Controls.Add(this.MainMenu);
-            this.DoubleBuffered = true;
-            this.MaximizeBox = false;
             this.Name = "MainForm";
-            this.Text = "Intel(R) RealSense(TM) SDK: Face Tracking";
+            this.Text = "Intel RealSense 视频图像采集";
             this.MainMenu.ResumeLayout(false);
             this.MainMenu.PerformLayout();
             this.Status2.ResumeLayout(false);
@@ -216,8 +207,8 @@
 
         #endregion
 
-        private System.Windows.Forms.Button Start;
-        private System.Windows.Forms.Button Stop;
+        private MaterialSkin.Controls.MaterialRaisedButton Start;
+        private MaterialSkin.Controls.MaterialRaisedButton Stop;
         private System.Windows.Forms.ToolStripMenuItem sourceToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem moduleToolStripMenuItem;
         private System.Windows.Forms.MenuStrip MainMenu;
@@ -229,8 +220,6 @@
         private System.Windows.Forms.ToolStripMenuItem Record;
         private System.Windows.Forms.ToolStripStatusLabel AlertsLabel;
         private System.Windows.Forms.ToolStripMenuItem colorResolutionToolStripMenuItem;
-        //private System.Windows.Forms.CheckBox Mirror;
-        private System.Windows.Forms.Button Savedata_txt;
         private System.Windows.Forms.ToolStripMenuItem ProfileToolStripMenuItem;
     }
 }

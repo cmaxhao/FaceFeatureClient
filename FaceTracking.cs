@@ -37,9 +37,11 @@ namespace DF_FaceTracking.cs
         private void DisplayPicture(PXCMImage image)
         {
             PXCMImage.ImageData data;
+
             if (image.AcquireAccess(PXCMImage.Access.ACCESS_READ, PXCMImage.PixelFormat.PIXEL_FORMAT_RGB32, out data) <
                 pxcmStatus.PXCM_STATUS_NO_ERROR) return;
             m_form.DrawBitmap(data.ToBitmap(0, image.info.width, image.info.height));
+            
             m_timer.Tick("");
             image.ReleaseAccess(data);
         }
@@ -122,13 +124,11 @@ namespace DF_FaceTracking.cs
                     captureMgr.FilterByStreamProfiles(set);
                 }
             }
-
             // Set Source & Landmark Profile Index 
             if (m_form.GetRecordState())
             {
                 captureMgr.SetFileName(m_form.GetFileName(), true);
             }
-            
             // Set Module            
             pp.EnableFace();
             PXCMFaceModule faceModule = pp.QueryFace();
@@ -153,16 +153,16 @@ namespace DF_FaceTracking.cs
 
             moduleConfiguration.strategy = PXCMFaceConfiguration.TrackingStrategyType.STRATEGY_RIGHT_TO_LEFT;
 
-            moduleConfiguration.detection.maxTrackedFaces = 4;
-            moduleConfiguration.landmarks.maxTrackedFaces = 4;
-            moduleConfiguration.pose.maxTrackedFaces = 4;
+            moduleConfiguration.detection.maxTrackedFaces = 2;
+            moduleConfiguration.landmarks.maxTrackedFaces = 2;
+            moduleConfiguration.pose.maxTrackedFaces = 2;
             
             PXCMFaceConfiguration.ExpressionsConfiguration econfiguration = moduleConfiguration.QueryExpressions();
             if (econfiguration == null)
             {
                 throw new Exception("ExpressionsConfiguration null");
             }
-            econfiguration.properties.maxTrackedFaces = 4;
+            econfiguration.properties.maxTrackedFaces =2;
 
             econfiguration.EnableAllExpressions();
             moduleConfiguration.detection.isEnabled = true;
@@ -178,7 +178,7 @@ namespace DF_FaceTracking.cs
                 throw new Exception("pulseConfiguration null");
             }
 			
-            pulseConfiguration.properties.maxTrackedFaces = 4;
+            pulseConfiguration.properties.maxTrackedFaces =2;
             if (m_form.IsPulseEnabled())
             {
                 pulseConfiguration.Enable();
@@ -251,7 +251,6 @@ namespace DF_FaceTracking.cs
                                     break;
                             }
 
-
                             moduleOutput.Update();
                             PXCMFaceConfiguration.RecognitionConfiguration recognition = moduleConfiguration.QueryRecognition();
                             if (recognition == null)
@@ -259,8 +258,6 @@ namespace DF_FaceTracking.cs
                                 pp.ReleaseFrame();
                                 continue;
                             }
-
-
                             m_form.DrawGraphics(moduleOutput,lastmoduleOutput);
                             lastmoduleOutput = moduleOutput;
                             m_form.UpdatePanel();
@@ -269,88 +266,11 @@ namespace DF_FaceTracking.cs
                     }
 
                 }
-
                 m_form.UpdateStatus("Stopped", MainForm.Label.StatusLabel);
             }
             moduleConfiguration.Dispose();
             pp.Close();
             pp.Dispose();
-        }
-
-        //zz
-        private void Savedata(PXCMFaceData faceOutput)
-        {
-            ////zz
-            PXCMFaceData.Face qface = faceOutput.QueryFaceByIndex(0);
-            PXCMFaceData.PoseData posedata = qface.QueryPose();
-            PXCMFaceData.LandmarksData Idata = qface.QueryLandmarks();
-            PXCMFaceData.LandmarkPoint[] points;
-            PXCMFaceData.PoseEulerAngles angles;
-            PXCMFaceData.HeadPosition headpostion;
-
-            posedata.QueryPoseAngles(out angles);
-            posedata.QueryHeadPosition(out headpostion);
-            Idata.QueryPoints(out points);
-            
-
-            string connSting;
-            connSting = "server=localhost;database=RealSense;Integrated Security=True ";
-            SqlConnection sConn = new SqlConnection(connSting);
-            try
-            {
-                sConn.Open();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("链接错误:" + ex.Message);
-            }
-
-            int[] a = new int[32] { 76, 77, 12, 16, 14, 10, 20, 24, 18, 22, 70, 0, 4, 7, 5, 9, 29, 26, 31, 30, 32, 39, 33, 47, 46, 48, 51, 52, 50, 56, 65, 61 };
-            int t = 0;
-
-            for (int i = 0; i < 32; i++)
-            {
-                string sql_Insert;
-
-                string times = DateTime.Now.ToString("yyyy-MM-dd") + " " + DateTime.Now.ToString("hh:mm:ss");
-
-                string LandmarkPointName = MarkPointName(points[a[t]].source.index);
-                
-                float Positionworld_x = points[a[t]].world.x;
-                float Positionworld_y = points[a[t]].world.y;
-                float Positionworld_z = points[a[t]].world.z;
-
-                float PositionImage_x = points[a[t]].image.x;
-                float PositionImage_y = points[a[t++]].image.y;
-
-                float HeadCenter_x = headpostion.headCenter.x;
-                float HeadCenter_y = headpostion.headCenter.y;
-                float HeadCenter_z = headpostion.headCenter.z;
-
-                float PoseEulerAngles_pitch = angles.pitch;
-                float PoseEulerAngles_roll = angles.roll;
-                float PoseEulerAngles_yaw = angles.yaw;
-
-                sql_Insert = "insert into FaceData(time,LandmarkPointName,[Positionworld.x],[Positionworld.y],[Positionworld.z],[PositionImage.x],[PositionImage.y],[HeadCenter.x],[HeadCenter.y],[HeadCenter.z],[PoseEulerAngles.pitch],[PoseEulerAngles.roll],[PoseEulerAngles.yaw])values('"
-                    + times + "','"
-                    + LandmarkPointName + "','"
-                    + Positionworld_x + "','"
-                    + Positionworld_y + "','"
-                    + Positionworld_z + "','"
-                    + PositionImage_x + "','"
-                    + PositionImage_y + "','"
-                    + HeadCenter_x + "','"
-                    + HeadCenter_y + "','"
-                    + HeadCenter_z + "','"
-                    + PoseEulerAngles_pitch + "','"
-                    + PoseEulerAngles_roll + "','"
-                    + PoseEulerAngles_yaw + "')";             
-
-                SqlCommand sCmd = new SqlCommand(sql_Insert, sConn);
-                sCmd.ExecuteNonQuery();
-               
-            }
-            sConn.Close();
         }
 
         private string MarkPointName(int index)

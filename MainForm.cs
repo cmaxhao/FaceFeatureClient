@@ -10,6 +10,12 @@ using System.Threading;
 using System.Windows.Forms;
 using System.IO;
 using System.Data.SqlClient;
+using System.Net;
+using System.Text;
+using DF_FaceTracking.cs.HttpServer;
+using MaterialSkin.Controls;
+using MaterialSkin;
+using DF_FaceTracking.cs.File;
 
 namespace DF_FaceTracking.cs
 {
@@ -20,7 +26,7 @@ namespace DF_FaceTracking.cs
             StatusLabel,
             AlertsLabel
         };
-
+        public HttpResponse response;
         public PXCMSession Session;
         public FacialExpression Expression;
         public volatile bool RegisterThisID = false;
@@ -44,38 +50,31 @@ namespace DF_FaceTracking.cs
         private static ToolStripMenuItem m_deviceMenuItem;
         private static ToolStripMenuItem m_moduleMenuItem;
         private const int LandmarkAlignment = -3;
-        private const int DefaultNumberOfFaces = 4;
+        private const int DefaultNumberOfFaces = 2;
         private string sessionID;
-        public MainForm(PXCMSession session)
+        public string RealFileName;
+        public MainForm(PXCMSession session,string realFileName)
         {
             InitializeComponent();
-
+            //皮肤代码
+          
             m_faceTextOrganizer = new FaceTextOrganizer();
             m_deviceMenuItem = new ToolStripMenuItem("Device");
             m_moduleMenuItem = new ToolStripMenuItem("Module");
             Session = session;
 
             Expression = new FacialExpression();
-
             CreateResolutionMap();
             PopulateDeviceMenu();
-            PopulateModuleMenu();
+            //PopulateModuleMenu();
             PopulateProfileMenu();
 
             InitializeUserSettings();
-            DisableUnsupportedAlgos();
-
             FormClosing += MainForm_FormClosing;
             Panel2.Paint += Panel_Paint;
+            RealFileName = realFileName;
 
-            Stream fs_less = new FileStream(string.Format("{0}{1}",Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"\FaceDateLess.txt"), FileMode.Append);
-            sw_less = new StreamWriter(fs_less);
-            sw_less.BaseStream.Seek(0, SeekOrigin.End);
-            //新增保存特征点功能
-            Stream fileFeature = new FileStream(string.Format("{0}{1}", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"\FaceFeature.txt"), FileMode.Append);
-            sw_feature = new StreamWriter(fileFeature);
-            sw_feature.BaseStream.Seek(0, SeekOrigin.End);
-            //创建存储视频的文件夹
+            //创建存储视频和照片的文件夹
             sessionID = Guid.NewGuid().ToString();
             string videoPath = Environment.CurrentDirectory + "\\data\\" + sessionID;
             try
@@ -83,8 +82,15 @@ namespace DF_FaceTracking.cs
                 Directory.CreateDirectory(videoPath);
             }
             catch (Exception ex) {
-
+                WriteLog.WriteError(ex.ToString());
+                throw;
             }
+        }
+        protected override void OnShown(EventArgs e)
+        {
+            Console.WriteLine("window onshown");
+            this.response.Send();
+            base.OnShown(e);
         }
 
         private void InitializeUserSettings()
@@ -96,11 +102,11 @@ namespace DF_FaceTracking.cs
             //realsense摄像头对应的设置
             if (deviceName == "IVcam")
             {
-                m_moduleSettings["Detection"] = new ModuleSettings { IsEnabled = true, NumberOfFaces = 4 };
-                m_moduleSettings["Landmarks"] = new ModuleSettings { IsEnabled = true, NumberOfFaces = 4 };
-                m_moduleSettings["Pose"] = new ModuleSettings { IsEnabled = true, NumberOfFaces = 4 };
-                m_moduleSettings["Expressions"] = new ModuleSettings { IsEnabled = true, NumberOfFaces = 4 };
-                m_moduleSettings["Pulse"] = new ModuleSettings { IsEnabled = false, NumberOfFaces = 4 };
+                m_moduleSettings["Detection"] = new ModuleSettings { IsEnabled = true, NumberOfFaces = 2 };
+                m_moduleSettings["Landmarks"] = new ModuleSettings { IsEnabled = true, NumberOfFaces = 2 };
+                m_moduleSettings["Pose"] = new ModuleSettings { IsEnabled = true, NumberOfFaces = 2 };
+                m_moduleSettings["Expressions"] = new ModuleSettings { IsEnabled = true, NumberOfFaces = 2 };
+                m_moduleSettings["Pulse"] = new ModuleSettings { IsEnabled = false, NumberOfFaces = 2 };
             }
         }
 
@@ -117,15 +123,6 @@ namespace DF_FaceTracking.cs
             }
 
             return "IVcam";
-        }
-
-        private void DisableUnsupportedAlgos()
-        {
-            string deviceMenuString = GetCheckedDevice();
-
-            if (deviceMenuString != null && (deviceMenuString.Contains("R200") || deviceMenuString.Contains("DS4")))
-            {
-            }
         }
 
         public Dictionary<string, PXCMCapture.DeviceInfo> Devices { get; set; }
@@ -202,6 +199,8 @@ namespace DF_FaceTracking.cs
                     }
                     catch (Exception e)
                     {
+                        WriteLog.WriteError(e.ToString());
+                        throw;
                     }
                     device.Dispose();
                 }
@@ -248,7 +247,6 @@ namespace DF_FaceTracking.cs
                     m_deviceMenuItem.DropDownItems.Add(sm1);
                     sm1.Click += (sender, eventArgs) =>
                     {
-                        DisableUnsupportedAlgos();
                     };
                 }
 
@@ -453,32 +451,51 @@ namespace DF_FaceTracking.cs
         {
             RadioCheck(sender, "Profile");
         }
-
+        public void StartClick() {
+            FaceTracking.m_frame = 0;
+            //在启动摄像头的时候打开文件
+            fs_less = new FileStream(string.Format("{0}{1}", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "\\study_" + RealFileName + "Less.txt"), FileMode.Append);
+            sw_less = new StreamWriter(fs_less);
+            sw_less.BaseStream.Seek(0, SeekOrigin.End);
+            //新增保存特征点功能
+            fileFeature = new FileStream(string.Format("{0}{1}", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "\\study_" + RealFileName + ".txt"), FileMode.Append);
+            sw_feature = new StreamWriter(fileFeature);
+            sw_feature.BaseStream.Seek(0, SeekOrigin.End);
+            SaveUserSettings();
+            Stopped = false;
+            //此处开始做人脸识别跟踪
+            expressionNumber++;
+            isStart = true;
+            var thread = new Thread(DoTracking);
+            thread.Start();
+        }
         private void Start_Click(object sender, EventArgs e)
         {
             //zz
             FaceTracking.m_frame = 0;
-
             SaveUserSettings();
             MainMenu.Enabled = false;
             Start.Enabled = false;
             Stop.Enabled = true;
-
             Stopped = false;
             //此处开始做人脸识别跟踪
+            expressionNumber++;
+            isStart = true;
             var thread = new Thread(DoTracking);
             thread.Start();
+        }
+
+        private void uploadFile_Click(object sender, EventArgs e)
+        {
+
         }
 
         private void DoTracking()
         {
             var ft = new FaceTracking(this);
             ft.SimplePipeline();
-
             Invoke(new DoTrackingCompleted(() =>
             {
-                DisableUnsupportedAlgos();
-
                 MainMenu.Enabled = true;
                 Start.Enabled = true;
                 Stop.Enabled = false;
@@ -486,39 +503,42 @@ namespace DF_FaceTracking.cs
             }));
         }
 
+        public void StopClick()
+        {
+            Stopped = true;
+            isStart = false;
+            sw_less.Close();
+            fs_less.Close();
+            sw_feature.Close();
+            fileFeature.Close();
+        }
         private void Stop_Click(object sender, EventArgs e)
         {
             Stopped = true;
             isStart = false;
-            
         }
 
         private void SaveUserSettings()
         {
             m_moduleSettings["Detection"].IsEnabled = true;
-            m_moduleSettings["Detection"].NumberOfFaces = 4;
+            m_moduleSettings["Detection"].NumberOfFaces = 2;
 
             m_moduleSettings["Landmarks"].IsEnabled = true;
-            m_moduleSettings["Landmarks"].NumberOfFaces = 4;
+            m_moduleSettings["Landmarks"].NumberOfFaces = 2;
 
             m_moduleSettings["Pose"].IsEnabled = true;
-            m_moduleSettings["Pose"].NumberOfFaces = 4;
+            m_moduleSettings["Pose"].NumberOfFaces = 2;
 
             m_moduleSettings["Expressions"].IsEnabled = true;
-            m_moduleSettings["Expressions"].NumberOfFaces =4;
+            m_moduleSettings["Expressions"].NumberOfFaces =2;
 
             m_moduleSettings["Pulse"].IsEnabled = false;
-            m_moduleSettings["Pulse"].NumberOfFaces = 4;
-
+            m_moduleSettings["Pulse"].NumberOfFaces = 2;
         }
 
         public string GetCheckedDevice()
         {
-            return (from ToolStripMenuItem m in MainMenu.Items
-                    where m.Text.Equals("Device")
-                    from ToolStripMenuItem e in m.DropDownItems
-                    where e.Checked
-                    select e.Text).FirstOrDefault();
+            return "Intel(R) RealSense(TM) 3D Camera SR300";
         }
 
         public PXCMCapture.DeviceInfo GetCheckedDeviceInfo()
@@ -585,14 +605,10 @@ namespace DF_FaceTracking.cs
             lock (m_bitmapLock)
             {
                 if (m_bitmap == null) return;
-
-                    //是否显示视频图像
-                    e.Graphics.DrawImage(m_bitmap, Panel2.ClientRectangle);
-
- 
+                //是否显示视频图像,内存不足
+                e.Graphics.DrawImage(m_bitmap, Panel2.ClientRectangle);
             }
         }
-
         public void UpdatePanel()
         {
             Panel2.Invoke(new UpdatePanelDelegate(() => Panel2.Invalidate()));
@@ -604,6 +620,7 @@ namespace DF_FaceTracking.cs
             {
                 if (m_bitmap != null)
                 {
+                    SavePicture(FaceTracking.m_frame);
                     m_bitmap.Dispose();
                 }
                 m_bitmap = new Bitmap(picture);
@@ -636,12 +653,11 @@ namespace DF_FaceTracking.cs
                     m_faceTextOrganizer.ChangeFace(i, face, m_bitmap.Height, m_bitmap.Width);
                 }
 
-                //DrawLocation(face);
-                //DrawLandmark(face);
-                //DrawPose(face);
-                //绘制分辨率为1280*720的图像
-                //DrawPulse(face);
-                //DrawExpressions(face);
+                DrawLocation(face);
+                DrawLandmark(face);
+                DrawPose(face);
+                //绘制分辨率为1280*720的图像,drawpulse已删除
+                DrawExpressions(face);
             }
         }
         //zz
@@ -670,7 +686,17 @@ namespace DF_FaceTracking.cs
 
         public bool GetRecordState()
         {
-            return Record.Checked;
+            try
+            {
+                string time = DateTime.Now.ToString("yyyy-MM-dd");
+                m_filename = Environment.CurrentDirectory + "\\data\\" + sessionID + "\\record.rssdk";
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            string saveRSSDK= ConfigReader.GetConfigValue("SaveRSSDK");
+            return saveRSSDK.Equals("0")?false:true;
         }
 
         private delegate string GetFileDelegate();
@@ -774,7 +800,7 @@ namespace DF_FaceTracking.cs
                         if (points[i].confidenceImage == 0)
                             graphics.DrawString("x", font, lowConfidenceBrush, point);
 
-                        graphics.DrawString(i.ToString(), font, brush, point);
+                        graphics.DrawString("•", font, brush, point);
 
                         while (k > -1)
                         {
@@ -782,7 +808,6 @@ namespace DF_FaceTracking.cs
                                 graphics.DrawString(i.ToString(), font, lowConfidenceBrush, point);
 
                             k--;
-
                         }
                         if (PositionChange(points[i].image, _lastpoints[i].image) > 1)
                         {
@@ -801,29 +826,27 @@ namespace DF_FaceTracking.cs
                     if (!tag && isStart)
                     {
                         Savedata_less(face, FaceTracking.m_frame);
-                        
                     }
                     _lastpoints = points;
-                   
-                    //显示z的距离，鼻尖到摄像头的距离
-                    string status="提示";
-                    string tip = "";
-                    if (points[29].world.z < 0.26)
-                    {
-                        tip = "√ ";
-                        Savedata_txt.Invoke(new UpdateStatusDelegate(delegate (string s) { Savedata_txt.Enabled = true; }), new object[] { status });
-                    }
-                        
-                    else
-                    {
-                        tip = "X ";
-                        Savedata_txt.Invoke(new UpdateStatusDelegate(delegate (string s) { Savedata_txt.Enabled = false; }), new object[] { status });
-                    }
                 }
                 
             }
         }
-
+        //save image
+        public void SavePicture(int frameCount) {
+            StringBuilder sb = new StringBuilder("\\");
+            sb.Append(frameCount.ToString());
+            sb.Append(".jpg");
+            String fileName = Environment.CurrentDirectory + "\\data\\" + sessionID + sb.ToString();
+            try
+            {
+                m_bitmap.Save(fileName, System.Drawing.Imaging.ImageFormat.Jpeg);
+            }
+            catch (Exception e) {
+                WriteLog.WriteError(e.ToString());
+                throw;
+            }
+        }
         //zz
         private void Savedata_txt_KeyDown(object sender, KeyEventArgs e)
         {
@@ -936,29 +959,6 @@ namespace DF_FaceTracking.cs
             }
         }
 
-        private void DrawPulse(PXCMFaceData.Face face)
-        {
-            Debug.Assert(face != null);
-            if (m_bitmap == null || true) return;
-
-            var pulseData = face.QueryPulse();
-            if (pulseData == null)
-                return;
-
-            lock (m_bitmapLock)
-            {
-                var pulseString = "Pulse: " + pulseData.QueryHeartRate();
-
-                using (var graphics = Graphics.FromImage(m_bitmap))
-                using (var brush = new SolidBrush(m_faceTextOrganizer.Colour))
-                using (var font = new Font(FontFamily.GenericMonospace, m_faceTextOrganizer.FontSize, FontStyle.Bold))
-                {
-                    graphics.DrawString(pulseString, font, brush, m_faceTextOrganizer.PulseLocation);
-                }
-            }
-
-        }
-
         #endregion
 
         private delegate void DoTrackingCompleted();
@@ -970,12 +970,6 @@ namespace DF_FaceTracking.cs
         public bool IsPulseEnabled()
         {
             return false;
-        }
-        private void Savedata_txt_Click(object sender, EventArgs e)
-        {
-            expressionNumber++;
-            isStart = true;
-
         }
 
         private void SaveFeature(PXCMFaceData.Face qface, int frameCount) {
@@ -998,7 +992,6 @@ namespace DF_FaceTracking.cs
                     double position_x = Math.Round(points[i].image.x - rect.x, 4);
                     double position_y = Math.Round(points[i].image.y - rect.y, 4);
                     double position_z = Math.Round(points[i].world.z, 5);
-
                     sw_feature.Write(position_x.ToString()+ ' '+ position_y.ToString() + ' '+ position_z.ToString() + ' ');
                 }
             for (int i = 0; i < 22; i++)
@@ -1041,7 +1034,6 @@ namespace DF_FaceTracking.cs
 
             for (int i = 0; i < 32; i++)
             {
-
                 //string LandmarkPointName = "points[a[t]].source.index";
                 string LandmarkPointName = MarkPointName(points[a[t]].source.index);
                 float Positionworld_x = points[a[t]].world.x;
@@ -1169,6 +1161,8 @@ namespace DF_FaceTracking.cs
         bool isStart = false;
         StreamWriter sw_less;
         StreamWriter sw_feature;
+        Stream fs_less;
+        Stream fileFeature;
         #endregion
     }
 }
