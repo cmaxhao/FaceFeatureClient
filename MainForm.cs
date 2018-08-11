@@ -51,18 +51,16 @@ namespace DF_FaceTracking.cs
         private static ToolStripMenuItem m_moduleMenuItem;
         private const int LandmarkAlignment = -3;
         private const int DefaultNumberOfFaces = 2;
-        private string sessionID;
         public string RealFileName;
-        public MainForm(PXCMSession session,string realFileName)
+        public string videoPath = "";
+        public MainForm(PXCMSession session)
         {
             InitializeComponent();
             //皮肤代码
-          
             m_faceTextOrganizer = new FaceTextOrganizer();
             m_deviceMenuItem = new ToolStripMenuItem("Device");
             m_moduleMenuItem = new ToolStripMenuItem("Module");
             Session = session;
-
             Expression = new FacialExpression();
             CreateResolutionMap();
             PopulateDeviceMenu();
@@ -72,19 +70,7 @@ namespace DF_FaceTracking.cs
             InitializeUserSettings();
             FormClosing += MainForm_FormClosing;
             Panel2.Paint += Panel_Paint;
-            RealFileName = realFileName;
-
-            //创建存储视频和照片的文件夹
-            sessionID = Guid.NewGuid().ToString();
-            string videoPath = Environment.CurrentDirectory + "\\data\\" + sessionID;
-            try
-            {
-                Directory.CreateDirectory(videoPath);
-            }
-            catch (Exception ex) {
-                WriteLog.WriteError(ex.ToString());
-                throw;
-            }
+            this.MaximizeBox = false;
         }
         protected override void OnShown(EventArgs e)
         {
@@ -451,8 +437,20 @@ namespace DF_FaceTracking.cs
         {
             RadioCheck(sender, "Profile");
         }
-        public void StartClick() {
+        public void StartClick(string realFileName) {
+            RealFileName = realFileName;
             FaceTracking.m_frame = 0;
+            //创建存储视频和照片的文件夹
+            videoPath = Environment.CurrentDirectory + "\\data\\" + RealFileName;
+            try
+            {
+                Directory.CreateDirectory(videoPath);
+            }
+            catch (Exception ex)
+            {
+                WriteLog.WriteError(ex.ToString());
+                throw;
+            }
             //在启动摄像头的时候打开文件
             fs_less = new FileStream(string.Format("{0}{1}", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "\\study_" + RealFileName + "Less.txt"), FileMode.Append);
             sw_less = new StreamWriter(fs_less);
@@ -586,6 +584,7 @@ namespace DF_FaceTracking.cs
         {
             Stopped = true;
             e.Cancel = Stop.Enabled;
+            
             m_closing = true;
         }
 
@@ -676,7 +675,7 @@ namespace DF_FaceTracking.cs
             try
             {   
                 string time = DateTime.Now.ToString("yyyy-MM-dd");
-                m_filename = Environment.CurrentDirectory + "\\data\\" +sessionID+ "\\record.rssdk";
+                m_filename = Environment.CurrentDirectory + "\\data\\" + RealFileName + "\\record.rssdk";
             }
             catch (Exception)
             {
@@ -689,7 +688,7 @@ namespace DF_FaceTracking.cs
             try
             {
                 string time = DateTime.Now.ToString("yyyy-MM-dd");
-                m_filename = Environment.CurrentDirectory + "\\data\\" + sessionID + "\\record.rssdk";
+                m_filename = Environment.CurrentDirectory + "\\data\\" + RealFileName + "\\record.rssdk";
             }
             catch (Exception)
             {
@@ -837,7 +836,7 @@ namespace DF_FaceTracking.cs
             StringBuilder sb = new StringBuilder("\\");
             sb.Append(frameCount.ToString());
             sb.Append(".jpg");
-            String fileName = Environment.CurrentDirectory + "\\data\\" + sessionID + sb.ToString();
+            String fileName = videoPath + sb.ToString();
             try
             {
                 m_bitmap.Save(fileName, System.Drawing.Imaging.ImageFormat.Jpeg);

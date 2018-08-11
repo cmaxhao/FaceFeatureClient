@@ -71,9 +71,9 @@ namespace DF_FaceTracking.cs.HttpServer
             {
                 //post请求的参数取自body
                 this.Body = GetRequestBody(rows);
+                Console.WriteLine(string.Format("body {0}",this.Body));
                 var contentType = GetHeader(RequestHeaders.ContentType);
                 var isUrlencoded = contentType == @"application/x-www-form-urlencoded";
-
                 if (isUrlencoded)
                 {
                     if (!this.Body.Equals(""))
@@ -81,16 +81,26 @@ namespace DF_FaceTracking.cs.HttpServer
                         string bodyContent = this.Body;
                         string fileContent = "";
                         string token = "";
-                        try {
-                            JObject jo = (JObject)JsonConvert.DeserializeObject(bodyContent);
-                             fileContent = jo["fileContent"].ToString();
-                             token = jo["token"].ToString();
-                             first[1] += ("&fileContent=" + fileContent);
-                             first[1]+= ("&token=" + token);
+                        //确保Json字符串完整，如果不完整，那么就舍弃该次
+                        if (bodyContent.Contains("}"))
+                        {
+                            try
+                            {
+                                JObject jo = (JObject)JsonConvert.DeserializeObject(bodyContent);
+                                fileContent = jo["fileContent"].ToString();
+                                token = jo["token"].ToString();
+                                first[1] += ("&fileContent=" + fileContent);
+                                first[1] += ("&token=" + token);
+                            }
+                            catch (Exception e)
+                            {
+                                WriteLog.WriteError(e.ToString());
+                                throw;
+                            }
                         }
-                        catch(Exception e) {
-                            WriteLog.WriteError(e.ToString());
-                            throw;
+                        else {
+                            first[1] += ("&fileContent=" + "undefined");
+                            first[1] += ("&token=" + "undefined");
                         }
 
                     }
@@ -128,13 +138,28 @@ namespace DF_FaceTracking.cs.HttpServer
         {
             var length = 0;
             var data = string.Empty;
-
+            //read heahers
             do
             {
-                length = stream.Read(bytes, 0, MAX_SIZE - 1);
-                data += Encoding.UTF8.GetString(bytes, 0, length);
-            } while (length > 0 && !data.Contains("\r\n\r\n"));
-
+                data +=  (char)stream.ReadByte();
+            } while (!data.EndsWith("\r\n\r\n"));
+            //read body
+            string contentLenHeader = "Content-Length: ";
+            if(!data.Contains(contentLenHeader))
+            {
+                return data;
+            }
+            int startIndex = data.IndexOf(contentLenHeader)+contentLenHeader.Length;
+            int endIndex = data.IndexOf('\r',startIndex);
+            int contentLen = int.Parse( data.Substring(startIndex, endIndex-startIndex));
+            if (contentLen == 0) return data;
+            byte[] buffer = new byte[contentLen];
+            int currentIndex = 0;
+            do
+            {
+                currentIndex += stream.Read(buffer, currentIndex, contentLen - currentIndex);
+            } while (currentIndex < contentLen);
+            data+= Encoding.UTF8.GetString(buffer, 0, contentLen);
             return data;
         }
 

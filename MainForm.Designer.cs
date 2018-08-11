@@ -51,6 +51,7 @@
             // 
             this.Start.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.Start.Depth = 0;
+            this.Start.Enabled = false;
             this.Start.Location = new System.Drawing.Point(843, 159);
             this.Start.MouseState = MaterialSkin.MouseState.HOVER;
             this.Start.Name = "Start";
